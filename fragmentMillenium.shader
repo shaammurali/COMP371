@@ -27,3 +27,4 @@ void main()
         vec3 resultantColour = (ambient_contribution + diffuse_contribution) * cubeColour;
         color = vec4(resultantColour, 1.0f);
 }
+

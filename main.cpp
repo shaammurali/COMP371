@@ -228,7 +228,7 @@ int main(){
 
 	loadOBJ("cube.obj", vertices, normals, UVs);
 
-	GLuint VAO, vertices_VBO, normals_VBO, UVs_VBO;
+	GLuint VAO, vertices_VBO;
 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &vertices_VBO);
@@ -246,8 +246,8 @@ int main(){
         /////////////////////////////
 
         // Reading and compiling vertex and fragment shaders
-        GLuint milleniumVertexShader = compileShader("vertex", readShaderFile("vertexTest.shader"));
-        GLuint milleniumFragmentShader = compileShader("fragment", readShaderFile("fragmentTest.shader"));
+        GLuint milleniumVertexShader = compileShader("vertex", readShaderFile("vertexMillenium.shader"));
+        GLuint milleniumFragmentShader = compileShader("fragment", readShaderFile("fragmentMillenium.shader"));
         // Linking shaders
         GLuint milleniumShaderProgram = linkShaders(milleniumVertexShader, milleniumFragmentShader);
 
@@ -255,10 +255,10 @@ int main(){
 
         // Initial scaling and placement of the millenium falcon.
 	glm::mat4 model_matrix_millenium = glm::mat4(1.0f);
-        model_matrix_millenium = glm::scale(model_matrix_millenium, glm::vec3(0.02f));
-        model_matrix_millenium = glm::translate(model_matrix_millenium, glm::vec3(0.0f, 0.0f, -10.0f));
+        model_matrix_millenium = glm::scale(model_matrix_millenium, glm::vec3(0.1f));
+        //model_matrix_millenium = glm::translate(model_matrix_millenium, glm::vec3(0.0f, 0.0f, -10.0f));
         model_matrix_millenium = glm::rotate(model_matrix_millenium, glm::radians(360.f - 50.0f), glm::vec3(0,1,0));
-        model_matrix_millenium = glm::rotate(model_matrix_millenium, glm::radians(360.f - 90.0f), glm::vec3(1,0,0));
+        //model_matrix_millenium = glm::rotate(model_matrix_millenium, glm::radians(360.f - 90.0f), glm::vec3(1,0,0));
 
         ///////////////
         // GAME LOOP //
@@ -320,6 +320,10 @@ int main(){
 
                 // Draw the Millenium Falcon
 
+		model_matrix_millenium = glm::translate(model_matrix_millenium, camera_position);
+                view_matrix = glm::translate(view_matrix, camera_position);
+                view_matrix = glm::lookAt(camera_position+glm::vec3(0.0f, 3.0f, -5.0f), camera_position + glm::vec3(0.0f,0.0f,10.0f), glm::vec3(0.0f,1.0f,0.0f));
+                view_matrix = glm::translate(view_matrix, camera_position);
 
 
                 glUseProgram(milleniumShaderProgram);
@@ -333,19 +337,6 @@ int main(){
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
 
                 mesh->render();
-
-
-
-
-
-		//Draw the textured cube
-		//model_matrix = glm::translate(model_matrix, camera_position);
-
-		//view_matrix = glm::translate(view_matrix, camera_position);
-		//view_matrix = glm::lookAt(camera_position+glm::vec3(0.0f, 3.0f, -5.0f), camera_position + glm::vec3(0.0f,0.0f,10.0f), glm::vec3(0.0f,1.0f,0.0f));
-		//view_matrix = glm::translate(view_matrix, camera_position);
-		//glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
-		//glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
