@@ -32,15 +32,9 @@ std::string readShaderFile(std::string path) {
 GLuint compileShader(std::string shaderType, std::string shaderCode) {
     GLuint shader;
 
-    // Converting shader type to lowercase
-    std::string shaderTypeLower = "";
-    std::locale loc;
-    for(auto elem : shaderType)
-        shaderTypeLower += tolower(elem,loc);
-
-    if (shaderTypeLower == "vertex") {
+    if (shaderType == "vertex") {
         shader = glCreateShader(GL_VERTEX_SHADER);
-    } else if (shaderTypeLower == "fragment") {
+    } else if (shaderType == "fragment") {
         shader = glCreateShader(GL_FRAGMENT_SHADER);
     } else {
         std::cout << "ERROR: Impossible to compile shader type " << shaderType << std::endl;
