@@ -4,15 +4,17 @@ in vec3 outNormal;
 in vec3 fragPosition;
 in vec2 outUV;
 
+// uniform sampler2D shipTexture;
+
 out vec4 color;
 
 void main()
 {
         vec3 lightColour = vec3(1.0f, 1.0f, 1.0f);
-        vec3 cubeColour = vec3(1.0f, 1.0f, 1.0f);
+        vec3 cubeColour = vec3(0.7f, 0.7f, 0.7f);
 
         //ambient lighting
-        float ambientStrength = 0.35f;
+        float ambientStrength = 0.95f;
         vec3 ambient_contribution = ambientStrength * lightColour;
 
         //diffuse lighting

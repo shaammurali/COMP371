@@ -11,6 +11,19 @@
 
 #pragma warning(disable:4996)
 
+#include <vector>
+#include <stdio.h>
+#include <cstring>
+#include <string>
+
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
+#include "objloader.h"
+
+#pragma warning(disable:4996)
+
 bool loadOBJ(
 	const char * path,
 	std::vector<glm::vec3> & out_vertices,

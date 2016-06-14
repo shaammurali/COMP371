@@ -11,7 +11,6 @@
 
 #include "objloader.h"
 #include "Shaders.h"
-#include "Mesh.h"
 
 // Lance's include files
 #include "GL/glew.h"
@@ -20,10 +19,6 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "SOIL/SOIL.h"
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/mesh.h>
-#include <assimp/postprocess.h>
 
 using namespace std;
 
@@ -251,14 +246,63 @@ int main(){
         // Linking shaders
         GLuint milleniumShaderProgram = linkShaders(milleniumVertexShader, milleniumFragmentShader);
 
-        Mesh *mesh = new Mesh("Falcon-Only.obj");
+	std::vector<glm::vec3> verticesMillenium;
+	std::vector<glm::vec3> normalsMillenium;
+	std::vector<glm::vec2> UVsMillenium;
+
+	loadOBJ("Falcon-Only.obj", verticesMillenium, normalsMillenium, UVsMillenium);
+
+	GLuint VAOMillenium, vertices_VBOMillenium, normals_VBOMillenium, UVs_VBOMillenium;
+
+	glGenVertexArrays(1, &VAOMillenium);
+	glGenBuffers(1, &vertices_VBOMillenium);
+
+	// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+	glBindVertexArray(VAOMillenium);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vertices_VBOMillenium);
+	glBufferData(GL_ARRAY_BUFFER, verticesMillenium.size() * sizeof(glm::vec3), &verticesMillenium.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+	glEnableVertexAttribArray(0);
+
+	glGenBuffers(1, &normals_VBOMillenium);
+	glBindBuffer(GL_ARRAY_BUFFER, normals_VBOMillenium);
+	glBufferData(GL_ARRAY_BUFFER, normalsMillenium.size() * sizeof(glm::vec3), &normalsMillenium.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+	glEnableVertexAttribArray(1);
+
+	glGenBuffers(1, &UVs_VBOMillenium);
+	glBindBuffer(GL_ARRAY_BUFFER, UVs_VBOMillenium);
+	glBufferData(GL_ARRAY_BUFFER, UVsMillenium.size() * sizeof(glm::vec2), &UVsMillenium.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
+	glEnableVertexAttribArray(2);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindVertexArray(0);
+
+	GLuint projectionLocMillenium = glGetUniformLocation(milleniumShaderProgram, "projection_matrix");
 
         // Initial scaling and placement of the millenium falcon.
 	glm::mat4 model_matrix_millenium = glm::mat4(1.0f);
         model_matrix_millenium = glm::scale(model_matrix_millenium, glm::vec3(0.1f));
-        //model_matrix_millenium = glm::translate(model_matrix_millenium, glm::vec3(0.0f, 0.0f, -10.0f));
+        //model_matrix_millenium = glm::translate(model_matrix_millenium, glm::vec3(0.0f, 0.0f, 4.0f));
         model_matrix_millenium = glm::rotate(model_matrix_millenium, glm::radians(360.f - 50.0f), glm::vec3(0,1,0));
         //model_matrix_millenium = glm::rotate(model_matrix_millenium, glm::radians(360.f - 90.0f), glm::vec3(1,0,0));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         ///////////////
         // GAME LOOP //
@@ -336,7 +380,9 @@ int main(){
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
 
-                mesh->render();
+                glBindVertexArray(VAOMillenium);
+		glDrawArrays(GL_TRIANGLES, 0, verticesMillenium.size());
+                glBindVertexArray(0);
 
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
