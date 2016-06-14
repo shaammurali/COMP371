@@ -327,6 +327,26 @@ int main(){
 
 	glBindVertexArray(0);
 
+        // Texture configuration
+        //glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glActiveTexture(GL_TEXTURE0);
+
+        GLuint planetTexture;
+        glGenTextures(1, &planetTexture);
+        glBindTexture(GL_TEXTURE_2D, planetTexture);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        int planetTextureWidth, planetTextureHeight;
+        unsigned char* planetImage = SOIL_load_image("grass.jpg", &planetTextureWidth, &planetTextureHeight, 0, SOIL_LOAD_RGB);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, planetTextureWidth, planetTextureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, planetImage);
+
+        SOIL_free_image_data(planetImage);
+
+
 	glm::mat4 model_matrix_planet = glm::mat4(1.0f);
         model_matrix_planet = glm::scale(model_matrix_planet, glm::vec3(10.0f));
 	model_matrix_planet = glm::translate(model_matrix_planet, glm::vec3(0.0f, 0.0f, 10.0f));
@@ -418,6 +438,8 @@ int main(){
                 glUniformMatrix4fv(transformLocPlanet, 1, GL_FALSE, value_ptr(model_matrix_planet));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
+
+                glUniform1i(glGetUniformLocation(planetShaderProgram, "trainGroundTexture"), 0);
 
                 glBindVertexArray(VAOPlanet);
 		glDrawArrays(GL_TRIANGLES, 0, verticesPlanet.size());

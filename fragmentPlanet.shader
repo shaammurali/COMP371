@@ -4,14 +4,14 @@ in vec3 outNormal;
 in vec3 fragPosition;
 in vec2 outUV;
 
-// uniform sampler2D shipTexture;
+uniform sampler2D planetTexture;
 
 out vec4 color;
 
 void main()
 {
         vec3 lightColour = vec3(1.0f, 1.0f, 1.0f);
-        vec3 cubeColour = vec3(0.6f, 0.4f, 0.2f);
+        vec3 cubeColour = vec3(texture(planetTexture, outUV));
 
         //ambient lighting
         float ambientStrength = 0.95f;
@@ -28,6 +28,5 @@ void main()
 
         vec3 resultantColour = (ambient_contribution + diffuse_contribution) * cubeColour;
         color = vec4(resultantColour, 1.0f);
-        // color = vec4(1.0f, 0.5f, 0.5f, 1.0f);
 }
 
