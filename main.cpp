@@ -282,6 +282,56 @@ int main(){
         model_matrix_millenium = glm::scale(model_matrix_millenium, glm::vec3(0.1f));
         model_matrix_millenium = glm::rotate(model_matrix_millenium, glm::radians(360.f - 50.0f), glm::vec3(0,1,0));
 
+        //////////////////////////
+        // SPHERE/PLANET CONFIG //
+        //////////////////////////
+
+        // Reading and compiling vertex and fragment shaders
+        GLuint planetVertexShader = compileShader("vertex", readShaderFile("vertexPlanet.shader"));
+        GLuint planetFragmentShader = compileShader("fragment", readShaderFile("fragmentPlanet.shader"));
+        // Linking shaders
+        GLuint planetShaderProgram = linkShaders(planetVertexShader, planetFragmentShader);
+
+	std::vector<glm::vec3> verticesPlanet;
+	std::vector<glm::vec3> normalsPlanet;
+	std::vector<glm::vec2> UVsPlanet;
+
+	loadOBJ("sphere.obj", verticesPlanet, normalsPlanet, UVsPlanet);
+
+	GLuint VAOPlanet, vertices_VBOPlanet, normals_VBOPlanet, UVs_VBOPlanet;
+
+	glGenVertexArrays(1, &VAOPlanet);
+	glGenBuffers(1, &vertices_VBOPlanet);
+
+	// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+	glBindVertexArray(VAOPlanet);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vertices_VBOPlanet);
+	glBufferData(GL_ARRAY_BUFFER, verticesPlanet.size() * sizeof(glm::vec3), &verticesPlanet.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+	glEnableVertexAttribArray(0);
+
+	glGenBuffers(1, &normals_VBOPlanet);
+	glBindBuffer(GL_ARRAY_BUFFER, normals_VBOPlanet);
+	glBufferData(GL_ARRAY_BUFFER, normalsPlanet.size() * sizeof(glm::vec3), &normalsPlanet.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+	glEnableVertexAttribArray(1);
+
+	glGenBuffers(1, &UVs_VBOPlanet);
+	glBindBuffer(GL_ARRAY_BUFFER, UVs_VBOPlanet);
+	glBufferData(GL_ARRAY_BUFFER, UVsPlanet.size() * sizeof(glm::vec2), &UVsPlanet.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
+	glEnableVertexAttribArray(2);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindVertexArray(0);
+
+	glm::mat4 model_matrix_planet = glm::mat4(1.0f);
+        model_matrix_planet = glm::scale(model_matrix_planet, glm::vec3(10.0f));
+	model_matrix_planet = glm::translate(model_matrix_planet, glm::vec3(0.0f, 0.0f, 10.0f));
+        //model_matrix_planet = glm::rotate(model_matrix_planet, glm::radians(360.f - 50.0f), glm::vec3(0,1,0));
+
         ///////////////
         // GAME LOOP //
         ///////////////
@@ -339,7 +389,6 @@ int main(){
 
 
                 // Draw the Millenium Falcon
-
 		model_matrix_millenium = glm::translate(model_matrix_millenium, camera_position);
                 view_matrix = glm::translate(view_matrix, camera_position);
                 view_matrix = glm::lookAt(camera_position+glm::vec3(0.0f, 3.0f, -5.0f), camera_position + glm::vec3(0.0f,0.0f,10.0f), glm::vec3(0.0f,1.0f,0.0f));
@@ -357,6 +406,21 @@ int main(){
 
                 glBindVertexArray(VAOMillenium);
 		glDrawArrays(GL_TRIANGLES, 0, verticesMillenium.size());
+                glBindVertexArray(0);
+
+                // Draw the main planet
+                glUseProgram(planetShaderProgram);
+
+                GLuint transformLocPlanet= glGetUniformLocation(planetShaderProgram, "model_matrix_planet");
+                projectionLoc = glGetUniformLocation(planetShaderProgram, "projection_matrix");
+                viewMatrixLoc = glGetUniformLocation(planetShaderProgram, "view_matrix");
+
+                glUniformMatrix4fv(transformLocPlanet, 1, GL_FALSE, value_ptr(model_matrix_planet));
+		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
+
+                glBindVertexArray(VAOPlanet);
+		glDrawArrays(GL_TRIANGLES, 0, verticesPlanet.size());
                 glBindVertexArray(0);
 
 		// Swap the screen buffers
