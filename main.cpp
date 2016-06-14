@@ -214,27 +214,23 @@ int main(){
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 
 
-        // For some weird reason, the skybox disappears unless the vertices for an object are being loaded.
-        // I decided to load a simple cube.
-        // TO DO: Figure this out and fix it... Until then, we need to keep objloader.h included.
-	std::vector<glm::vec3> vertices;
-	std::vector<glm::vec3> normals;
-	std::vector<glm::vec2> UVs;
+        // For some weird reason, the skybox disappears unless the vertices for an object are being loaded. So we load a simple cube here.
+	std::vector<glm::vec3> verticesSkybox;
+	std::vector<glm::vec3> normalsSkybox;
+	std::vector<glm::vec2> UVsSkybox;
 
-	loadOBJ("cube.obj", vertices, normals, UVs);
+	loadOBJ("cube.obj", verticesSkybox, normalsSkybox, UVsSkybox);
 
-	GLuint VAO, vertices_VBO;
-
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &vertices_VBO);
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, vertices_VBO);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices.front(), GL_STATIC_DRAW);
+	GLuint VAOSkybox, vertices_VBOSkybox;
+	glGenVertexArrays(1, &VAOSkybox);
+	glGenBuffers(1, &vertices_VBOSkybox);
+	glBindVertexArray(VAOSkybox);
+	glBindBuffer(GL_ARRAY_BUFFER, vertices_VBOSkybox);
+	glBufferData(GL_ARRAY_BUFFER, verticesSkybox.size() * sizeof(glm::vec3), &verticesSkybox.front(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-
 
         /////////////////////////////
         // MILLENIUM FALCON CONFIG //
@@ -281,28 +277,10 @@ int main(){
 
 	glBindVertexArray(0);
 
-	GLuint projectionLocMillenium = glGetUniformLocation(milleniumShaderProgram, "projection_matrix");
-
         // Initial scaling and placement of the millenium falcon.
 	glm::mat4 model_matrix_millenium = glm::mat4(1.0f);
         model_matrix_millenium = glm::scale(model_matrix_millenium, glm::vec3(0.1f));
-        //model_matrix_millenium = glm::translate(model_matrix_millenium, glm::vec3(0.0f, 0.0f, 4.0f));
         model_matrix_millenium = glm::rotate(model_matrix_millenium, glm::radians(360.f - 50.0f), glm::vec3(0,1,0));
-        //model_matrix_millenium = glm::rotate(model_matrix_millenium, glm::radians(360.f - 90.0f), glm::vec3(1,0,0));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         ///////////////
         // GAME LOOP //
@@ -353,13 +331,11 @@ int main(){
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(skybox_view));
 
-                glBindVertexArray(VAO);
+                glBindVertexArray(VAOSkybox);
 		glDepthMask(GL_FALSE);
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+		glDrawArrays(GL_TRIANGLES, 0, verticesSkybox.size());
 		glDepthMask(GL_TRUE);
                 glBindVertexArray(0);
-
-
 
 
                 // Draw the Millenium Falcon
@@ -368,7 +344,6 @@ int main(){
                 view_matrix = glm::translate(view_matrix, camera_position);
                 view_matrix = glm::lookAt(camera_position+glm::vec3(0.0f, 3.0f, -5.0f), camera_position + glm::vec3(0.0f,0.0f,10.0f), glm::vec3(0.0f,1.0f,0.0f));
                 view_matrix = glm::translate(view_matrix, camera_position);
-
 
                 glUseProgram(milleniumShaderProgram);
 
