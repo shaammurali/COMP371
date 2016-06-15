@@ -22,17 +22,31 @@
 
 using namespace std;
 
-
 // Window dimensions
-const GLuint WINDOW_WIDTH = 1000, WINDOW_HEIGHT = 1000;
+const GLuint WINDOW_WIDTH = 700, WINDOW_HEIGHT = 700;
 const GLfloat CAMERA_MOVEMENT_STEP = 1.90f;
 const float ANGLE_ROTATION_STEP = 0.15f;
+
+int numberOfrows = 10;
+
+float asteroidRadius = 70.0f;
+glm::vec3 asteroidCentre = glm::vec3(0.0f);
+glm::vec3 asteroidScale = glm::vec3(4.0f);
+vector<glm::vec3> asteroidPositions;
 
 int width, height;
 GLFWwindow* window;
 
-glm::vec3 camera_position;
+glm::vec3 camera_position = glm::vec3(0.0f, 0.0f, -25.0f);
 glm::mat4 projection_matrix;
+
+int numPlanets = 0;
+float xVal;
+float yVal;
+float zVal;
+float radius;
+
+float planetRotationAxisSpeed = 0.2f;
 
 glm::vec3 camera_movement = glm::vec3(0.0f, 0.0f, 15.0f);
 double xpos, ypos;
@@ -41,10 +55,42 @@ bool mouse_click = false;
 GLuint colourVBO;
 vector<glm::vec3> planet_positions; // positions of planets in the world
 vector<float> planet_radius; // radius of planets
+vector<glm::vec3> planet_colors;
 
 float y_rotation_angle = 0.0f, x_rotation_angle = 0.0f;
 
 
+
+void IndividualPlanetGeneration() {
+        xVal = (float)(rand() % 100 - 50);
+        yVal = 0.0f;
+        zVal = (float)(rand() % 100 - 50);
+        planet_positions.push_back(glm::vec3(xVal, yVal, zVal));
+        radius = sqrt(xVal * xVal + yVal * yVal + zVal * zVal);
+        planet_radius.push_back(radius);
+        planet_colors.push_back(glm::vec3(
+                    (GLfloat)(rand()%255)/255,
+                    (GLfloat)(rand()%255)/255,
+                    (GLfloat)(rand()%255)/255));
+}
+
+void IndividualPlanetDestruction() {
+        planet_colors.pop_back();
+        planet_positions.pop_back();
+        planet_radius.pop_back();
+}
+
+void planetGeneration() {
+        // The sun position and color
+        planet_positions.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
+        planet_colors.push_back(glm::vec3(1.0f, 1.0f, 0.2f));
+
+	//generate positions for each of the planets at random
+	for (int num = 0; num < numPlanets-1; num++)
+	{
+                IndividualPlanetGeneration();
+	}
+}
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -91,6 +137,32 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 	if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT))
 		y_rotation_angle -= ANGLE_ROTATION_STEP;
+
+        // Generate new planets
+	if (key == GLFW_KEY_G && action == GLFW_PRESS) {
+                planet_colors.clear();
+                planet_radius.clear();
+                planet_positions.clear();
+                planetGeneration();
+        }
+
+        // planet rotation about their own axes
+	if (key == GLFW_KEY_M && action == GLFW_PRESS) {
+                planetRotationAxisSpeed += 0.1f;
+        }
+	if (key == GLFW_KEY_N && action == GLFW_PRESS) {
+                planetRotationAxisSpeed -= 0.1f;
+        }
+
+        // create/destroy planets
+	if (key == GLFW_KEY_I && action == GLFW_PRESS && numPlanets <= 15) {
+                numPlanets++;
+                IndividualPlanetGeneration();
+        }
+	if (key == GLFW_KEY_K && action == GLFW_PRESS && numPlanets >= 2) {
+                numPlanets--;
+                IndividualPlanetDestruction();
+        }
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
@@ -134,6 +206,7 @@ GLuint loadCubemap(std::vector<const GLchar*> faces)
 
 	return textureID;
 }
+
 
 void programInit() {
 	std::cout << "Starting GLFW context, OpenGL 3.3" << std::endl;
@@ -179,17 +252,6 @@ void programInit() {
 	glDepthFunc(GL_LESS);
 
 }
-
-//void makeMultiplePlanets(double x, double y)
-//{
-//	glm::vec3 NEW_PLANET = glm::vec3((float)x / WINDOW_WIDTH, (float)y / WINDOW_HEIGHT, 0.0f);
-//	planet_positions.push_back(NEW_PLANET);
-//
-//	glBindBuffer(GL_ARRAY_BUFFER, colourVBO);
-//	glBufferData(GL_ARRAY_BUFFER, planet_positions.size() * sizeof(glm::vec3), &planet_positions[0], GL_STATIC_DRAW);
-//	glBindBuffer(GL_ARRAY_BUFFER, 0); //unbind for good measure
-//}
-
 
 int main() {
 	programInit();
@@ -292,16 +354,6 @@ int main() {
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
 	glEnableVertexAttribArray(1);
 
-	/*
-	glGenBuffers(1, &UVs_VBOMillenium);
-	glBindBuffer(GL_ARRAY_BUFFER, UVs_VBOMillenium);
-	glBufferData(GL_ARRAY_BUFFER, UVsMillenium.size() * sizeof(glm::vec2), &UVsMillenium.front(), GL_STATIC_DRAW);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
-	glEnableVertexAttribArray(2);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	*/
-
 	glBindVertexArray(0);
 
 
@@ -350,43 +402,52 @@ int main() {
 
 	glBindVertexArray(0);
 
-	// Texture configuration
-	//glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	glActiveTexture(GL_TEXTURE0);
+	/////////////////////
+	// ASTEROID CONFIG //
+	////////////////////
 
-	GLuint planetTexture;
-	glGenTextures(1, &planetTexture);
-	glBindTexture(GL_TEXTURE_2D, planetTexture);
+	// Reading and compiling vertex and fragment shaders
+	GLuint asteroidVertexShader = compileShader("vertex", readShaderFile("vertexAsteroid.shader"));
+	GLuint asteroidFragmentShader = compileShader("fragment", readShaderFile("fragmentAsteroid.shader"));
+	// Linking shaders
+	GLuint asteroidShaderProgram = linkShaders(asteroidVertexShader, asteroidFragmentShader);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	std::vector<glm::vec3> verticesAsteroid;
+	std::vector<glm::vec3> normalsAsteroid;
+	std::vector<glm::vec2> UVsAsteroid;
 
-	int planetTextureWidth, planetTextureHeight;
-	unsigned char* planetImage = SOIL_load_image("grass.jpg", &planetTextureWidth, &planetTextureHeight, 0, SOIL_LOAD_RGB);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, planetTextureWidth, planetTextureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, planetImage);
+	loadOBJ("cube.obj", verticesAsteroid, normalsAsteroid, UVsAsteroid);
 
-	SOIL_free_image_data(planetImage);
+	GLuint VAOAsteroidBelt, vertices_VBOAsteroid, normals_VBOAsteroid, UVs_VBOAsteroid, vertices_VBOAsteroidBelt;
+        
+        glGenVertexArrays(1, &VAOAsteroidBelt);
+        glGenBuffers(1, &vertices_VBOAsteroid);
+        glGenBuffers(1, &vertices_VBOAsteroidBelt);
+//
+        glBindVertexArray(VAOAsteroidBelt);
+//
+        glBindBuffer(GL_ARRAY_BUFFER, vertices_VBOAsteroid);
+        glBufferData(GL_ARRAY_BUFFER, verticesAsteroid.size() * sizeof(glm::vec3), &verticesAsteroid.front(), GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+        glEnableVertexAttribArray(0);
+       
+        glBindBuffer(GL_ARRAY_BUFFER, vertices_VBOAsteroidBelt);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+        glVertexAttribDivisor(1, 1);
+        glEnableVertexAttribArray(1);
 
-	GLuint projectionLoc = glGetUniformLocation(skyboxShaderProgram, "projection_matrix");
-	GLuint viewMatrixLoc = glGetUniformLocation(skyboxShaderProgram, "view_matrix");
-	GLuint transformLocMillenium = glGetUniformLocation(milleniumShaderProgram, "model_matrix_millenium");
-	GLuint transformLocPlanet = glGetUniformLocation(planetShaderProgram, "model_matrix_planet");
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
 
-
-	float currentPlanetRotation = 0.0f;
-
-
-	///////////////
-	// GAME LOOP //
-	//////////////
+	/////////////////
+	// GAME CONFIG //
+	/////////////////
 
 	//FOR PROJECT
 	glfwGetCursorPos(window, &xpos, &ypos);
 	double xpos_old, ypos_old;
 
-	int numPlanets = 0;
+	float currentPlanetRotation = 0.0f;
 
 	do
 	{
@@ -394,23 +455,55 @@ int main() {
 		cin >> numPlanets;
 	} while (numPlanets <= 0 || numPlanets >= 16);
 
-	float xVal;
-	float yVal;
-	float zVal;
-	float radius;
+        planetGeneration();
 
-	//generate positions for each of the planets at random
-        planet_positions.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
-	for (int num = 0; num < numPlanets-1; num++)
-	{
-		xVal = rand() % 50 + 1;
-		yVal = 0.0f;
-		zVal = rand() % 50 + 1;
-		planet_positions.push_back(glm::vec3(xVal, yVal, zVal));
-		radius = sqrt(xVal * xVal + yVal * yVal + zVal * zVal);
-		planet_radius.push_back(radius);
-	}
 
+
+
+
+    glm::vec3 point;
+    const int MAX_ASTEROIDS = (360.0f / asteroidRadius);
+    float steps = floor(numberOfrows / 2);
+    int row = 0;
+
+    for(float zValue = steps * -5.0f; zValue <= steps * 5.0f; zValue += 5.0f)
+    {
+        for (int col = 0; col < 5; col++)
+        {
+            asteroidRadius += 5.0f;
+
+            bool r0c0c4 = ((row == 0) && ((col == 0) || (col == 4)));
+            bool r4c0c4 = ((row == numberOfrows - 1) && ((col == 0) || (col == 4)));
+
+            if(!r0c0c4 && !r4c0c4)
+            {
+                for(float i = 0.0f; i < 360.0f; i += (rand() % MAX_ASTEROIDS))
+                {
+                    if((rand() % 100 + 1) > 60) // 40% of the time.
+                    {
+                        //circle
+                        point.x = (float) (asteroidCentre.x + asteroidRadius * cos(glm::radians(i)));
+                        point.y = (float) (asteroidCentre.y + asteroidRadius * sin(glm::radians(i)));
+                        point.z = zValue;
+
+                        cout << "Asteroid Position: (" << point.x << ", " << point.y << ", " << point.z << ")" << endl;
+
+                        asteroidPositions.push_back(point);
+
+                        glBindBuffer(GL_ARRAY_BUFFER, vertices_VBOAsteroidBelt);
+                        glBufferData(GL_ARRAY_BUFFER, asteroidPositions.size() * sizeof(glm::vec3), &asteroidPositions.front(), GL_STATIC_DRAW);
+                        glBindBuffer(GL_ARRAY_BUFFER, 0); //unbind for good measure
+                    }
+                }
+            }
+        }
+        cout << asteroidPositions.size();
+        row++;
+    }
+
+	///////////////
+	// GAME LOOP //
+	///////////////
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -455,22 +548,11 @@ int main() {
 		glDepthMask(GL_TRUE);
 		glBindVertexArray(0);
 
-		//HERE
 		// Draw the Millenium Falcon
 		glm::mat4 model_matrix_millenium = glm::mat4(1.0f);
 		model_matrix_millenium = glm::translate(model_matrix_millenium, camera_position);
-		//model_matrix_millenium = glm::scale(model_matrix_millenium, glm::vec3(0.1f));
 		model_matrix_millenium = glm::rotate(model_matrix_millenium, glm::radians(360.f - 50.0f) + y_rotation_angle, glm::vec3(0, 1, 0));
-		//model_matrix_millenium = glm::rotate(model_matrix_millenium, y_rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));
 		model_matrix_millenium = glm::scale(model_matrix_millenium, glm::vec3(0.1f));
-
-		//model_matrix_millenium = glm::rotate(model_matrix_millenium, x_rotation_angle, glm::vec3(1.0f, 0.0f, 0.0f));
-
-		//model_matrix_millenium = glm::rotate(model_matrix_millenium, y_rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));
-
-
-		//view_matrix = glm::lookAt(camera_position + glm::vec3(0.0f, 3.0f, -5.0f), camera_position + glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
 
 		view_matrix = glm::lookAt(camera_position + glm::vec3(0.0f, 0.2f, 0.0f), camera_position + glm::vec3(sin(y_rotation_angle), 0.2f, cos(y_rotation_angle)), glm::vec3(0.0f, 1.0f, 0.0f));
 
@@ -490,105 +572,75 @@ int main() {
 	
 
 		// Draw the main planet
-		glUseProgram(planetShaderProgram);
+                glUseProgram(planetShaderProgram);
 
-		for (int x = 0; x < numPlanets; x++)
-		{
-			//makeMultiplePlanets(x);
-			GLuint transformLocPlanet = glGetUniformLocation(planetShaderProgram, "model_matrix_planet");
-			projectionLoc = glGetUniformLocation(planetShaderProgram, "projection_matrix");
-			viewMatrixLoc = glGetUniformLocation(planetShaderProgram, "view_matrix");
-
-			glm::mat4 model_matrix_planet = glm::mat4(1.0f);
-			model_matrix_planet = glm::scale(model_matrix_planet, glm::vec3(10.0f));
-
-
-			model_matrix_planet = glm::translate(model_matrix_planet, planet_positions.at(x));
-			//model_matrix_planet = glm::translate(model_matrix_planet, glm::vec3(0.0f, 0.0f, 10.0f));
-			model_matrix_planet = glm::rotate(model_matrix_planet, glm::radians(currentPlanetRotation), glm::vec3(0, 1, 0));
+                for (int x = 0; x < numPlanets; x++)
+                {
+                        //makeMultiplePlanets(x);
+                        GLuint transformLocPlanet = glGetUniformLocation(planetShaderProgram, "model_matrix_planet");
+                        projectionLoc = glGetUniformLocation(planetShaderProgram, "projection_matrix");
+                        viewMatrixLoc = glGetUniformLocation(planetShaderProgram, "view_matrix");
+                        GLuint sphereColorLoc = glGetUniformLocation(planetShaderProgram, "sphereColor");
+                        GLuint planetBumpFactorXLoc = glGetUniformLocation(planetShaderProgram, "planetBumpFactorX");
+                        GLuint planetBumpFactorYLoc = glGetUniformLocation(planetShaderProgram, "planetBumpFactorY");
+                        GLuint planetBumpFactorZLoc = glGetUniformLocation(planetShaderProgram, "planetBumpFactorZ");
 
 
-			glUniformMatrix4fv(transformLocPlanet, 1, GL_FALSE, value_ptr(model_matrix_planet));
-			glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
-			glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
+                        glm::mat4 model_matrix_planet = glm::mat4(1.0f);
+                        model_matrix_planet = glm::scale(model_matrix_planet, glm::vec3(10.0f));
 
-			glUniform1i(glGetUniformLocation(planetShaderProgram, "trainGroundTexture"), 0);
+                        model_matrix_planet = glm::translate(model_matrix_planet, planet_positions.at(x));
+                        model_matrix_planet = glm::rotate(model_matrix_planet, glm::radians(currentPlanetRotation), glm::vec3(0, 1, 0));
 
-			glBindVertexArray(VAOPlanet);
-			glDrawArrays(GL_TRIANGLES, 0, verticesPlanet.size());
-			glBindVertexArray(0);
-		}
+                        float planetBumpFactorX = (float)(rand() % 1000)/50000 + 1;
+                        float planetBumpFactorY = (float)(rand() % 1000)/50000 + 1;
+                        float planetBumpFactorZ = (float)(rand() % 1000)/50000 + 1;
 
+                        glUniformMatrix4fv(transformLocPlanet, 1, GL_FALSE, value_ptr(model_matrix_planet));
+                        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+                        glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
+                        glUniform3fv(sphereColorLoc, 1, glm::value_ptr(planet_colors.at(x)));
+                        glUniform1f(planetBumpFactorXLoc, planetBumpFactorX);
+                        glUniform1f(planetBumpFactorYLoc, planetBumpFactorY);
+                        glUniform1f(planetBumpFactorZLoc, planetBumpFactorZ);
 
-		///*GLuint transformLocPlanet = glGetUniformLocation(planetShaderProgram, "model_matrix_planet");
-		//projectionLoc = glGetUniformLocation(planetShaderProgram, "projection_matrix");
-		//viewMatrixLoc = glGetUniformLocation(planetShaderProgram, "view_matrix");
-
-		//glm::mat4 model_matrix_planet = glm::mat4(1.0f);
-		//model_matrix_planet = glm::scale(model_matrix_planet, glm::vec3(10.0f));
-
-
-		//model_matrix_planet = glm::translate(model_matrix_planet, glm::vec3(0.0f, 0.0f, 10.0f));
-		//model_matrix_planet = glm::translate(model_matrix_planet, glm::vec3(0.0f, 0.0f, 10.0f));
-		//model_matrix_planet = glm::rotate(model_matrix_planet, glm::radians(currentPlanetRotation), glm::vec3(0, 1, 0));
-
-
-		//glUniformMatrix4fv(transformLocPlanet, 1, GL_FALSE, value_ptr(model_matrix_planet));
-		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
-		//glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
-
-		//glUniform1i(glGetUniformLocation(planetShaderProgram, "trainGroundTexture"), 0);
-
-		//glBindVertexArray(VAOPlanet);
-		//glDrawArrays(GL_TRIANGLES, 0, verticesPlanet.size());
-		//glBindVertexArray(0);
-		//
-
-		// Draw second planet
-		//transformLocPlanet = glGetUniformLocation(planetShaderProgram, "model_matrix_planet");
-		//projectionLoc = glGetUniformLocation(planetShaderProgram, "projection_matrix");
-		//viewMatrixLoc = glGetUniformLocation(planetShaderProgram, "view_matrix");
-
-		//model_matrix_planet = glm::scale(model_matrix_planet, glm::vec3(100.0f));
-		//model_matrix_planet = glm::translate(model_matrix_planet, glm::vec3(0.0f, 0.0f, 7.0f));
-		//model_matrix_planet = glm::rotate(model_matrix_planet, glm::radians(currentPlanetRotation), glm::vec3(0, 1, 0));
-
-		//glUniformMatrix4fv(transformLocPlanet, 1, GL_FALSE, value_ptr(model_matrix_planet));
-		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
-		//glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
-
-		//glUniform1i(glGetUniformLocation(planetShaderProgram, "trainGroundTexture"), 0);
-
-		//glBindVertexArray(VAOPlanet);
-		//glDrawArrays(GL_TRIANGLES, 0, verticesPlanet.size());
-		//glBindVertexArray(0);
-
-		// Draw third planet
-		//transformLocPlanet = glGetUniformLocation(planetShaderProgram, "model_matrix_planet");
-		//projectionLoc = glGetUniformLocation(planetShaderProgram, "projection_matrix");
-		//viewMatrixLoc = glGetUniformLocation(planetShaderProgram, "view_matrix");
-
-		//model_matrix_planet = glm::scale(model_matrix_planet, glm::vec3(5.0f));
-		//model_matrix_planet = glm::translate(model_matrix_planet, glm::vec3(0.0f, 0.0f, 3.0f));
-		//model_matrix_planet = glm::rotate(model_matrix_planet, glm::radians(currentPlanetRotation), glm::vec3(0, 1, 0));
-
-		//glUniformMatrix4fv(transformLocPlanet, 1, GL_FALSE, value_ptr(model_matrix_planet));
-		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
-		//glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
-
-		//glUniform1i(glGetUniformLocation(planetShaderProgram, "trainGroundTexture"), 0);
-
-		//glBindVertexArray(VAOPlanet);
-		//glDrawArrays(GL_TRIANGLES, 0, verticesPlanet.size());
-		//glBindVertexArray(0);*/
+                        glBindVertexArray(VAOPlanet);
+                        glDrawArrays(GL_TRIANGLES, 0, verticesPlanet.size());
+                        glBindVertexArray(0);
+                }
 
 
 
 
-		currentPlanetRotation += 0.2f;
-		if (currentPlanetRotation == 360.0f) {
+
+                // Draw asteroids
+                        glUseProgram(asteroidShaderProgram);
+                        GLuint transformLocAsteroid = glGetUniformLocation(asteroidShaderProgram, "model_matrix_asteroid");
+                        projectionLoc = glGetUniformLocation(asteroidShaderProgram, "projection_matrix");
+                        viewMatrixLoc = glGetUniformLocation(asteroidShaderProgram, "view_matrix");
+
+                        glm::mat4 model_matrix_asteroid = glm::mat4(1.0f);
+                        model_matrix_asteroid = glm::rotate(model_matrix_asteroid, (GLfloat)glfwGetTime() * 0.5f, glm::vec3(0.0f, 1.0f, 0.0f));
+                        model_matrix_asteroid = glm::rotate(model_matrix_asteroid, glm::radians(90.0f) , glm::vec3(1.0f, 0.0f, 0.0f));
+                        model_matrix_asteroid = glm::scale(model_matrix_asteroid, asteroidScale);
+
+                        glUniformMatrix4fv(transformLocAsteroid, 1, GL_FALSE, value_ptr(model_matrix_asteroid));
+                        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+                        glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
+
+                        glBindVertexArray(VAOAsteroidBelt);
+                        glDrawArraysInstanced(GL_TRIANGLES, 0, 36, verticesPlanet.size());
+                        glBindVertexArray(0);
+
+
+
+		currentPlanetRotation += planetRotationAxisSpeed;
+		if (currentPlanetRotation >= 360.0f) {
 			currentPlanetRotation = 0.0f;
 		}
+                if (currentPlanetRotation < 0.0f) {
+                        currentPlanetRotation = 360.0f;
+                }
 
 		//glm::mat4 projection_matrix;
 		projection_matrix = glm::perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 1000.0f);

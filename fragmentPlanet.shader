@@ -5,13 +5,15 @@ in vec3 fragPosition;
 in vec2 outUV;
 
 uniform sampler2D planetTexture;
+uniform bool drawSun;
+uniform vec3 sphereColor;
 
 out vec4 color;
 
 void main()
 {
         vec3 lightColour = vec3(1.0f, 1.0f, 1.0f);
-        vec3 cubeColour = vec3(texture(planetTexture, outUV));
+        vec3 cubeColour = sphereColor;
 
         //ambient lighting
         float ambientStrength = 0.20f;
@@ -36,7 +38,7 @@ void main()
                 diffuse_contribution += max(dot(norm, normalize(light_positions[i] - fragPosition)), 0.0f) * lightColour;
         }
 
-        vec3 resultantColour = (ambient_contribution + diffuse_contribution) * cubeColour;
+        vec3 resultantColour = (ambient_contribution + 0.8*diffuse_contribution) * cubeColour;
         color = vec4(resultantColour, 1.0f);
 }
 
