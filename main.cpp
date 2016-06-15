@@ -22,9 +22,10 @@
 
 using namespace std;
 
+
 // Window dimensions
 const GLuint WINDOW_WIDTH = 1000, WINDOW_HEIGHT = 1000;
-const GLfloat CAMERA_MOVEMENT_STEP = 0.60f;
+const GLfloat CAMERA_MOVEMENT_STEP = 1.90f;
 const float ANGLE_ROTATION_STEP = 0.15f;
 
 int width, height;
@@ -38,6 +39,7 @@ double xpos, ypos;
 bool mouse_click = false;
 
 float y_rotation_angle = 0.0f, x_rotation_angle = 0.0f;
+
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -54,17 +56,24 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 
+	//backwards
 	if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT))
-		camera_position.z += CAMERA_MOVEMENT_STEP;
-
+	{
+		camera_position.z -= cos(y_rotation_angle)*CAMERA_MOVEMENT_STEP;
+		camera_position.x -= sin(y_rotation_angle)*CAMERA_MOVEMENT_STEP;
+	}
+	//forwards
 	if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
-		camera_position.z -= CAMERA_MOVEMENT_STEP;
-
+	{
+		camera_position.z += cos(y_rotation_angle)*CAMERA_MOVEMENT_STEP;
+		camera_position.x += sin(y_rotation_angle)*CAMERA_MOVEMENT_STEP;
+	}
+	//left
 	if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT))
-		camera_position.x -= CAMERA_MOVEMENT_STEP;
-
-	if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT))
 		camera_position.x += CAMERA_MOVEMENT_STEP;
+	//right
+	if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT))
+		camera_position.x -= CAMERA_MOVEMENT_STEP;
 
 	//rotate cube
 	if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT))
@@ -82,14 +91,14 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-		{
-			mouse_click = true;
-		}
-		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
-		{
-			mouse_click = false;
-		}
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+	{
+		mouse_click = true;
+	}
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+	{
+		mouse_click = false;
+	}
 
 }
 
@@ -147,7 +156,7 @@ void programInit() {
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback); //ADDED FOR PROJECT
-	// Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
+															   // Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
 	glewExperimental = GL_TRUE;
 	// Initialize GLEW to setup the OpenGL Function pointers
 	if (glewInit() != GLEW_OK)
@@ -167,18 +176,18 @@ void programInit() {
 
 }
 
-int main(){
-        programInit();
+int main() {
+	programInit();
 
-        ///////////////////
-        // SKYBOX CONFIG //
-        ///////////////////
+	///////////////////
+	// SKYBOX CONFIG //
+	///////////////////
 
-        // Reading and compiling vertex and fragment shaders
-        GLuint skyboxVertexShader = compileShader("vertex", readShaderFile("vertexSkybox.shader"));
-        GLuint skyboxFragmentShader = compileShader("fragment", readShaderFile("fragmentSkybox.shader"));
-        // Linking shaders
-        GLuint skyboxShaderProgram = linkShaders(skyboxVertexShader, skyboxFragmentShader);
+	// Reading and compiling vertex and fragment shaders
+	GLuint skyboxVertexShader = compileShader("vertex", readShaderFile("vertexSkybox.shader"));
+	GLuint skyboxFragmentShader = compileShader("fragment", readShaderFile("fragmentSkybox.shader"));
+	// Linking shaders
+	GLuint skyboxShaderProgram = linkShaders(skyboxVertexShader, skyboxFragmentShader);
 
 	vector<const GLchar*> faces;
 	int skybox = 3;
@@ -214,7 +223,7 @@ int main(){
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 
 
-        // For some weird reason, the skybox disappears unless the vertices for an object are being loaded. So we load a simple cube here.
+	// For some weird reason, the skybox disappears unless the vertices for an object are being loaded. So we load a simple cube here.
 	std::vector<glm::vec3> verticesSkybox;
 	std::vector<glm::vec3> normalsSkybox;
 	std::vector<glm::vec2> UVsSkybox;
@@ -232,15 +241,15 @@ int main(){
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-        /////////////////////////////
-        // MILLENIUM FALCON CONFIG //
-        /////////////////////////////
+	/////////////////////////////
+	// MILLENIUM FALCON CONFIG //
+	/////////////////////////////
 
-        // Reading and compiling vertex and fragment shaders
-        GLuint milleniumVertexShader = compileShader("vertex", readShaderFile("vertexMillenium.shader"));
-        GLuint milleniumFragmentShader = compileShader("fragment", readShaderFile("fragmentMillenium.shader"));
-        // Linking shaders
-        GLuint milleniumShaderProgram = linkShaders(milleniumVertexShader, milleniumFragmentShader);
+	// Reading and compiling vertex and fragment shaders
+	GLuint milleniumVertexShader = compileShader("vertex", readShaderFile("vertexMillenium.shader"));
+	GLuint milleniumFragmentShader = compileShader("fragment", readShaderFile("fragmentMillenium.shader"));
+	// Linking shaders
+	GLuint milleniumShaderProgram = linkShaders(milleniumVertexShader, milleniumFragmentShader);
 
 	std::vector<glm::vec3> verticesMillenium;
 	std::vector<glm::vec3> normalsMillenium;
@@ -267,6 +276,7 @@ int main(){
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
 	glEnableVertexAttribArray(1);
 
+	/*
 	glGenBuffers(1, &UVs_VBOMillenium);
 	glBindBuffer(GL_ARRAY_BUFFER, UVs_VBOMillenium);
 	glBufferData(GL_ARRAY_BUFFER, UVsMillenium.size() * sizeof(glm::vec2), &UVsMillenium.front(), GL_STATIC_DRAW);
@@ -274,23 +284,20 @@ int main(){
 	glEnableVertexAttribArray(2);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	*/
 
 	glBindVertexArray(0);
 
-        // Initial scaling and placement of the millenium falcon.
-	glm::mat4 model_matrix_millenium = glm::mat4(1.0f);
-        model_matrix_millenium = glm::scale(model_matrix_millenium, glm::vec3(0.1f));
-        model_matrix_millenium = glm::rotate(model_matrix_millenium, glm::radians(360.f - 50.0f), glm::vec3(0,1,0));
 
-        //////////////////////////
-        // SPHERE/PLANET CONFIG //
-        //////////////////////////
+	//////////////////////////
+	// SPHERE/PLANET CONFIG //
+	//////////////////////////
 
-        // Reading and compiling vertex and fragment shaders
-        GLuint planetVertexShader = compileShader("vertex", readShaderFile("vertexPlanet.shader"));
-        GLuint planetFragmentShader = compileShader("fragment", readShaderFile("fragmentPlanet.shader"));
-        // Linking shaders
-        GLuint planetShaderProgram = linkShaders(planetVertexShader, planetFragmentShader);
+	// Reading and compiling vertex and fragment shaders
+	GLuint planetVertexShader = compileShader("vertex", readShaderFile("vertexPlanet.shader"));
+	GLuint planetFragmentShader = compileShader("fragment", readShaderFile("fragmentPlanet.shader"));
+	// Linking shaders
+	GLuint planetShaderProgram = linkShaders(planetVertexShader, planetFragmentShader);
 
 	std::vector<glm::vec3> verticesPlanet;
 	std::vector<glm::vec3> normalsPlanet;
@@ -327,40 +334,50 @@ int main(){
 
 	glBindVertexArray(0);
 
-        // Texture configuration
-        //glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glActiveTexture(GL_TEXTURE0);
+	// Texture configuration
+	//glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	glActiveTexture(GL_TEXTURE0);
 
-        GLuint planetTexture;
-        glGenTextures(1, &planetTexture);
-        glBindTexture(GL_TEXTURE_2D, planetTexture);
+	GLuint planetTexture;
+	glGenTextures(1, &planetTexture);
+	glBindTexture(GL_TEXTURE_2D, planetTexture);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        int planetTextureWidth, planetTextureHeight;
-        unsigned char* planetImage = SOIL_load_image("grass.jpg", &planetTextureWidth, &planetTextureHeight, 0, SOIL_LOAD_RGB);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, planetTextureWidth, planetTextureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, planetImage);
+	int planetTextureWidth, planetTextureHeight;
+	unsigned char* planetImage = SOIL_load_image("grass.jpg", &planetTextureWidth, &planetTextureHeight, 0, SOIL_LOAD_RGB);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, planetTextureWidth, planetTextureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, planetImage);
 
-        SOIL_free_image_data(planetImage);
+	SOIL_free_image_data(planetImage);
+
+	GLuint projectionLoc = glGetUniformLocation(skyboxShaderProgram, "projection_matrix");
+	GLuint viewMatrixLoc = glGetUniformLocation(skyboxShaderProgram, "view_matrix");
+	GLuint transformLocMillenium = glGetUniformLocation(milleniumShaderProgram, "model_matrix_millenium");
+	GLuint transformLocPlanet = glGetUniformLocation(planetShaderProgram, "model_matrix_planet");
 
 
-	glm::mat4 model_matrix_planet = glm::mat4(1.0f);
-        model_matrix_planet = glm::scale(model_matrix_planet, glm::vec3(10.0f));
-	model_matrix_planet = glm::translate(model_matrix_planet, glm::vec3(0.0f, 0.0f, 10.0f));
-        //model_matrix_planet = glm::rotate(model_matrix_planet, glm::radians(360.f - 50.0f), glm::vec3(0,1,0));
 
-        ///////////////
-        // GAME LOOP //
-        ///////////////
+
+
+        float currentPlanetRotation = 0.0f;
+
+
+
+
+
+
+
+
+	///////////////
+	// GAME LOOP //
+	///////////////
 
 	//FOR PROJECT
 	glfwGetCursorPos(window, &xpos, &ypos);
 	double xpos_old, ypos_old;
-
-	projection_matrix = glm::perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -373,77 +390,143 @@ int main(){
 			ypos_old = ypos;
 			glfwGetCursorPos(window, &xpos, &ypos);
 
-                        camera_movement += glm::vec3(0.0f, 0.0f, 1.0f) * ((GLfloat)(ypos - ypos_old)*0.025f);
+			camera_movement += glm::vec3(0.0f, 0.0f, 1.0f) * ((GLfloat)(ypos - ypos_old)*0.025f);
 
 			if ((ypos - ypos_old) > 0)
 				x_rotation_angle += 0.01f;
 			else if ((ypos - ypos_old) < 0)
 				x_rotation_angle -= 0.01f;
 			if ((xpos - xpos_old) > 0)
-				y_rotation_angle += 0.01f;
-			else if ((xpos - xpos_old) < 0)
 				y_rotation_angle -= 0.01f;
+			else if ((xpos - xpos_old) < 0)
+				y_rotation_angle += 0.01f;
 		}
 
-		//model_matrix = glm::rotate(model_matrix, y_rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));
-		//model_matrix = glm::rotate(model_matrix, x_rotation_angle, glm::vec3(1.0f, 0.0f, 0.0f));
-                glm::mat4 view_matrix;
-		view_matrix = translate(view_matrix, camera_position);
-                view_matrix = glm::rotate(view_matrix, y_rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));
-                view_matrix = glm::rotate(view_matrix, x_rotation_angle, glm::vec3(1.0f, 0.0f, 0.0f));
+		//HERE
+		glm::mat4 view_matrix;
+                view_matrix = glm::rotate(view_matrix, -y_rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));
+	
 
 		//Draw the skybox
-                glUseProgram(skyboxShaderProgram);
-                glUniform1i(glGetUniformLocation(skyboxShaderProgram, "skybox"), 1); //sky box should read from texture unit 1
+		glUseProgram(skyboxShaderProgram);
+		glUniform1i(glGetUniformLocation(skyboxShaderProgram, "skybox"), 1); //sky box should read from texture unit 1
                 GLuint projectionLoc = glGetUniformLocation(skyboxShaderProgram, "projection_matrix");
                 GLuint viewMatrixLoc = glGetUniformLocation(skyboxShaderProgram, "view_matrix");
 		glm::mat4 skybox_view = glm::mat4(glm::mat3(view_matrix)); //remove the translation data
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(skybox_view));
 
-                glBindVertexArray(VAOSkybox);
+		glBindVertexArray(VAOSkybox);
 		glDepthMask(GL_FALSE);
 		glDrawArrays(GL_TRIANGLES, 0, verticesSkybox.size());
 		glDepthMask(GL_TRUE);
-                glBindVertexArray(0);
+		glBindVertexArray(0);
 
-
-                // Draw the Millenium Falcon
+		//HERE
+		// Draw the Millenium Falcon
+		glm::mat4 model_matrix_millenium = glm::mat4(1.0f);
 		model_matrix_millenium = glm::translate(model_matrix_millenium, camera_position);
-                view_matrix = glm::translate(view_matrix, camera_position);
-                view_matrix = glm::lookAt(camera_position+glm::vec3(0.0f, 3.0f, -5.0f), camera_position + glm::vec3(0.0f,0.0f,10.0f), glm::vec3(0.0f,1.0f,0.0f));
-                view_matrix = glm::translate(view_matrix, camera_position);
+		//model_matrix_millenium = glm::scale(model_matrix_millenium, glm::vec3(0.1f));
+		model_matrix_millenium = glm::rotate(model_matrix_millenium, glm::radians(360.f - 50.0f)+y_rotation_angle, glm::vec3(0, 1, 0));
+		//model_matrix_millenium = glm::rotate(model_matrix_millenium, y_rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));
+		model_matrix_millenium = glm::scale(model_matrix_millenium, glm::vec3(0.1f));
+	
+		//model_matrix_millenium = glm::rotate(model_matrix_millenium, x_rotation_angle, glm::vec3(1.0f, 0.0f, 0.0f));
 
-                glUseProgram(milleniumShaderProgram);
+		//model_matrix_millenium = glm::rotate(model_matrix_millenium, y_rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));
+
+		
+		//view_matrix = glm::lookAt(camera_position + glm::vec3(0.0f, 3.0f, -5.0f), camera_position + glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+
+		view_matrix = glm::lookAt(camera_position + glm::vec3(0.0f, 0.2f, 0.0f), camera_position + glm::vec3(sin(y_rotation_angle), 0.2f, cos(y_rotation_angle)), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		glUseProgram(milleniumShaderProgram);
 
                 GLuint transformLocMillenium = glGetUniformLocation(milleniumShaderProgram, "model_matrix_millenium");
-                projectionLoc = glGetUniformLocation(milleniumShaderProgram, "projection_matrix");
-                viewMatrixLoc = glGetUniformLocation(milleniumShaderProgram, "view_matrix");
+		projectionLoc = glGetUniformLocation(milleniumShaderProgram, "projection_matrix");
+		viewMatrixLoc = glGetUniformLocation(milleniumShaderProgram, "view_matrix");
 
-                glUniformMatrix4fv(transformLocMillenium, 1, GL_FALSE, value_ptr(model_matrix_millenium));
+		glUniformMatrix4fv(transformLocMillenium, 1, GL_FALSE, value_ptr(model_matrix_millenium));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
 
-                glBindVertexArray(VAOMillenium);
+		glBindVertexArray(VAOMillenium);
 		glDrawArrays(GL_TRIANGLES, 0, verticesMillenium.size());
-                glBindVertexArray(0);
+		glBindVertexArray(0);
 
-                // Draw the main planet
-                glUseProgram(planetShaderProgram);
 
-                GLuint transformLocPlanet= glGetUniformLocation(planetShaderProgram, "model_matrix_planet");
-                projectionLoc = glGetUniformLocation(planetShaderProgram, "projection_matrix");
-                viewMatrixLoc = glGetUniformLocation(planetShaderProgram, "view_matrix");
+		// Draw the main planet
+		glUseProgram(planetShaderProgram);
 
-                glUniformMatrix4fv(transformLocPlanet, 1, GL_FALSE, value_ptr(model_matrix_planet));
+                GLuint transformLocPlanet = glGetUniformLocation(planetShaderProgram, "model_matrix_planet");
+		projectionLoc = glGetUniformLocation(planetShaderProgram, "projection_matrix");
+		viewMatrixLoc = glGetUniformLocation(planetShaderProgram, "view_matrix");
+
+		glm::mat4 model_matrix_planet = glm::mat4(1.0f);
+		//model_matrix_planet = glm::scale(model_matrix_planet, glm::vec3(10.0f));
+                model_matrix_planet = glm::translate(model_matrix_planet, glm::vec3(0.0f, 0.0f, 10.0f));
+		model_matrix_planet = glm::rotate(model_matrix_planet, glm::radians(currentPlanetRotation), glm::vec3(0, 1, 0));
+
+
+		glUniformMatrix4fv(transformLocPlanet, 1, GL_FALSE, value_ptr(model_matrix_planet));
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
 
-                glUniform1i(glGetUniformLocation(planetShaderProgram, "trainGroundTexture"), 0);
+		glUniform1i(glGetUniformLocation(planetShaderProgram, "trainGroundTexture"), 0);
 
-                glBindVertexArray(VAOPlanet);
+		glBindVertexArray(VAOPlanet);
 		glDrawArrays(GL_TRIANGLES, 0, verticesPlanet.size());
-                glBindVertexArray(0);
+		glBindVertexArray(0);
+
+                // Draw second planet
+                transformLocPlanet = glGetUniformLocation(planetShaderProgram, "model_matrix_planet");
+		projectionLoc = glGetUniformLocation(planetShaderProgram, "projection_matrix");
+		viewMatrixLoc = glGetUniformLocation(planetShaderProgram, "view_matrix");
+
+		//model_matrix_planet = glm::scale(model_matrix_planet, glm::vec3(100.0f));
+		model_matrix_planet = glm::translate(model_matrix_planet, glm::vec3(0.0f, 0.0f, 7.0f));
+		model_matrix_planet = glm::rotate(model_matrix_planet, glm::radians(currentPlanetRotation), glm::vec3(0, 1, 0));
+
+		glUniformMatrix4fv(transformLocPlanet, 1, GL_FALSE, value_ptr(model_matrix_planet));
+		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
+
+		glUniform1i(glGetUniformLocation(planetShaderProgram, "trainGroundTexture"), 0);
+
+		glBindVertexArray(VAOPlanet);
+		glDrawArrays(GL_TRIANGLES, 0, verticesPlanet.size());
+		glBindVertexArray(0);
+
+                // Draw third planet
+                transformLocPlanet = glGetUniformLocation(planetShaderProgram, "model_matrix_planet");
+		projectionLoc = glGetUniformLocation(planetShaderProgram, "projection_matrix");
+		viewMatrixLoc = glGetUniformLocation(planetShaderProgram, "view_matrix");
+
+                //model_matrix_planet = glm::scale(model_matrix_planet, glm::vec3(5.0f));
+		model_matrix_planet = glm::translate(model_matrix_planet, glm::vec3(0.0f, 0.0f, 3.0f));
+		model_matrix_planet = glm::rotate(model_matrix_planet, glm::radians(currentPlanetRotation), glm::vec3(0, 1, 0));
+
+		glUniformMatrix4fv(transformLocPlanet, 1, GL_FALSE, value_ptr(model_matrix_planet));
+		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+		glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view_matrix));
+
+		glUniform1i(glGetUniformLocation(planetShaderProgram, "trainGroundTexture"), 0);
+
+		glBindVertexArray(VAOPlanet);
+		glDrawArrays(GL_TRIANGLES, 0, verticesPlanet.size());
+		glBindVertexArray(0);
+
+
+
+
+                currentPlanetRotation += 0.2f;
+                if (currentPlanetRotation == 360.0f) {
+                        currentPlanetRotation = 0.0f;
+                }
+
+		//glm::mat4 projection_matrix;
+		projection_matrix = glm::perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 1000.0f);
 
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
